@@ -31,9 +31,9 @@ class NewProjectCommand(TemplateCommand):
             help="Template to use for the project (default: project)",
         )
         parser.add_argument(
-            "-D",
-            "--directory",
-            help="Directory where the project should be created (default: current directory)",
+            "directory",
+            nargs="?",
+            help="Directory where the project should be created. If not provided, uses current directory. Use '.' to scaffold in current directory without creating a project subdirectory.",
         )
         parser.add_argument("--author", help="Author name for the project")
         parser.add_argument("-d", "--description", help="Project description")
@@ -60,6 +60,11 @@ class NewProjectCommand(TemplateCommand):
             action="store_true",
             help="Don't install dependencies after creating the project",
         )
+        parser.add_argument(
+            "--no-project-dir",
+            action="store_true",
+            help="Generate project files in the target directory instead of creating a subdirectory with the project name. Also implied when directory is '.'.",
+        )
 
     def handle(self, **kwargs) -> None:
         """Handle the new project command."""
@@ -78,13 +83,22 @@ class NewProjectCommand(TemplateCommand):
         self.validate_name(name)
 
         # Determine target directory
-        if directory:
-            target_dir = Path(directory) / name
+        no_project_dir = kwargs.get("no_project_dir", False)
+        # Special case: if directory is ".", treat as no-project-dir (scaffold in current directory)
+        if directory == ".":
+            no_project_dir = True
+            target_dir = Path.cwd()
         else:
-            target_dir = Path.cwd() / name
+            if no_project_dir:
+                target_dir = Path(directory) if directory else Path.cwd()
+            else:
+                if directory:
+                    target_dir = Path(directory) / name
+                else:
+                    target_dir = Path.cwd() / name
 
-        # Check if project directory already exists
-        if target_dir.exists() and not overwrite:
+        # Check if project directory already exists (unless we are scaffolding in place)
+        if not no_project_dir and target_dir.exists() and not overwrite:
             if any(target_dir.iterdir()):
                 raise CommandExecutionError(
                     f"Directory '{target_dir}' already exists and is not empty. "
@@ -120,7 +134,12 @@ class NewProjectCommand(TemplateCommand):
                 template, target_dir, context, overwrite
             )
 
-            print(f"\nProject '{name}' created successfully at: {target_dir}")
+            if no_project_dir:
+                print(
+                    f"\nProject '{name}' created successfully in the current directory: {target_dir}"
+                )
+            else:
+                print(f"\nProject '{name}' created successfully at: {target_dir}")
 
             # Create project configuration
             self._create_project_config(target_dir, context)
@@ -130,8 +149,7 @@ class NewProjectCommand(TemplateCommand):
                 self._install_dependencies(target_dir)
 
             # Print next steps
-            self._print_next_steps(name, target_dir, no_install)
-
+            self._print_next_steps(name, target_dir, no_install, no_project_dir)
         except Exception as e:
             raise CommandExecutionError(f"Failed to create project: {e}")
 
@@ -187,7 +205,11 @@ class NewProjectCommand(TemplateCommand):
             )
 
     def _print_next_steps(
-        self, project_name: str, project_dir: Path, no_install: bool
+        self,
+        project_name: str,
+        project_dir: Path,
+        no_install: bool,
+        no_project_dir: bool = False,
     ) -> None:
         """Print next steps for the user."""
 
@@ -195,7 +217,10 @@ class NewProjectCommand(TemplateCommand):
         print("🎉 Project created successfully!")
         print("=" * 50)
         print("\nNext steps:")
-        print("  1. cd {project_dir.name}")
+        if no_project_dir:
+            print("  1. The files have been generated in the current directory.")
+        else:
+            print(f"  1. cd {project_dir.name}")
 
         if no_install:
             print("  2. pip install -r requirements.txt")
