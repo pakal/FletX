@@ -84,13 +84,18 @@ class NewProjectCommand(TemplateCommand):
 
         # Determine target directory
         no_project_dir = kwargs.get("no_project_dir", False)
-        if no_project_dir:
-            target_dir = Path(directory) if directory else Path.cwd()
+        # Special case: if directory is ".", treat as no-project-dir (scaffold in current directory)
+        if directory == ".":
+            no_project_dir = True
+            target_dir = Path.cwd()
         else:
-            if directory:
-                target_dir = Path(directory) / name
+            if no_project_dir:
+                target_dir = Path(directory) if directory else Path.cwd()
             else:
-                target_dir = Path.cwd() / name
+                if directory:
+                    target_dir = Path(directory) / name
+                else:
+                    target_dir = Path.cwd() / name
 
         # Check if project directory already exists (unless we are scaffolding in place)
         if not no_project_dir and target_dir.exists() and not overwrite:
