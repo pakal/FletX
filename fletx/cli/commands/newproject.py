@@ -127,29 +127,31 @@ class NewProjectCommand(TemplateCommand):
             "fletx_version": __version__,
         }
 
-         try:
-             # Generate project from template
-             print(f"Creating new FletX project '{name}'...")
-             template_manager.generate_from_template(
-                 template, target_dir, context, overwrite
-             )
+        try:
+            # Generate project from template
+            print(f"Creating new FletX project '{name}'...")
+            template_manager.generate_from_template(
+                template, target_dir, context, overwrite
+            )
 
-             if no_project_dir:
-                 print(f"\nProject '{name}' created successfully in the current directory: {target_dir}")
-             else:
-                 print(f"\nProject '{name}' created successfully at: {target_dir}")
+            if no_project_dir:
+                print(
+                    f"\nProject '{name}' created successfully in the current directory: {target_dir}"
+                )
+            else:
+                print(f"\nProject '{name}' created successfully at: {target_dir}")
 
-             # Create project configuration
-             self._create_project_config(target_dir, context)
+            # Create project configuration
+            self._create_project_config(target_dir, context)
 
-             # Install dependencies if requested
-             if not no_install:
-                 self._install_dependencies(target_dir)
+            # Install dependencies if requested
+            if not no_install:
+                self._install_dependencies(target_dir)
 
-             # Print next steps
-             self._print_next_steps(name, target_dir, no_install, no_project_dir)
-         except Exception as e:
-             raise CommandExecutionError(f"Failed to create project: {e}")
+            # Print next steps
+            self._print_next_steps(name, target_dir, no_install, no_project_dir)
+        except Exception as e:
+            raise CommandExecutionError(f"Failed to create project: {e}")
 
     def _create_project_config(self, project_dir: Path, context: dict) -> None:
         """Create project configuration file."""
@@ -203,7 +205,11 @@ class NewProjectCommand(TemplateCommand):
             )
 
     def _print_next_steps(
-        self, project_name: str, project_dir: Path, no_install: bool, no_project_dir: bool = False
+        self,
+        project_name: str,
+        project_dir: Path,
+        no_install: bool,
+        no_project_dir: bool = False,
     ) -> None:
         """Print next steps for the user."""
 
