@@ -31,9 +31,9 @@ class NewProjectCommand(TemplateCommand):
             help="Template to use for the project (default: project)",
         )
         parser.add_argument(
-            "-D",
-            "--directory",
-            help="Directory where the project should be created (default: current directory)",
+            "directory",
+            nargs="?",
+            help="Directory where the project should be created. If not provided, uses current directory. Use '.' to scaffold in current directory without creating a project subdirectory.",
         )
         parser.add_argument("--author", help="Author name for the project")
         parser.add_argument("-d", "--description", help="Project description")
@@ -63,7 +63,7 @@ class NewProjectCommand(TemplateCommand):
         parser.add_argument(
             "--no-project-dir",
             action="store_true",
-            help="Generate project files in the target directory instead of creating a subdirectory with the project name",
+            help="Generate project files in the target directory instead of creating a subdirectory with the project name. Also implied when directory is '.'.",
         )
 
     def handle(self, **kwargs) -> None:
