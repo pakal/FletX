@@ -173,3 +173,143 @@ def test_service_dispose():
     s.dispose()
     assert s._disposed
     assert s.state == ServiceState.DISPOSED
+
+
+def test_service_stop():
+    """stop() transitions a READY service back to IDLE."""
+    s = FletXService()
+    assert s.state == ServiceState.READY
+    s.stop()
+    assert s.state == ServiceState.IDLE
+
+
+def test_service_stop_when_idle():
+    """stop() on an IDLE service is a no-op."""
+    s = FletXService(auto_start=False)
+    assert s.state == ServiceState.IDLE
+    s.stop()  # should not raise
+    assert s.state == ServiceState.IDLE
+
+
+def test_service_restart():
+    """restart() stops then starts the service."""
+    s = FletXService()
+    assert s.state == ServiceState.READY
+    s.restart()
+    assert s.state == ServiceState.READY
+
+
+def test_service_auto_start():
+    """auto_start=True starts the service immediately."""
+    s = FletXService(auto_start=True)
+    assert s.state == ServiceState.READY
+
+
+def test_service_name_default():
+    """Default name is the class name."""
+    s = FletXService(auto_start=False)
+    assert s.name == "FletXService"
+
+
+def test_service_custom_name():
+    """Custom name is stored."""
+    s = FletXService(name="MyService", auto_start=False)
+    assert s.name == "MyService"
+
+
+def test_service_dispose_idempotent():
+    """Calling dispose twice does not raise."""
+    s = FletXService()
+    s.dispose()
+    s.dispose()
+    assert s._disposed
+
+
+def test_service_set_data_after_dispose_raises():
+    """set_data raises RuntimeError after dispose."""
+    s = FletXService()
+    s.dispose()
+    try:
+        s.set_data("key", "value")
+        assert False, "Expected RuntimeError"
+    except RuntimeError:
+        pass
+
+
+def test_service_set_error_after_dispose_raises():
+    """set_error raises RuntimeError after dispose."""
+    s = FletXService()
+    s.dispose()
+    try:
+        s.set_error(ValueError("oops"))
+        assert False, "Expected RuntimeError"
+    except RuntimeError:
+        pass
+
+
+def test_service_start_already_started():
+    """start() on a non-IDLE service is a no-op (logged warning)."""
+    s = FletXService()  # auto-starts to READY
+    s.start()  # should not raise or change state
+    assert s.state == ServiceState.READY
+
+
+def test_service_start_after_dispose_raises():
+    """start() after dispose raises RuntimeError."""
+    s = FletXService()
+    s.dispose()
+    try:
+        s.start()
+        assert False, "Expected RuntimeError"
+    except RuntimeError:
+        pass
+
+
+def test_service_str():
+    """__str__ includes name and state."""
+    s = FletXService(name="TestSvc", auto_start=False)
+    text = str(s)
+    assert "TestSvc" in text
+    assert "IDLE" in text or "idle" in text
+
+
+def test_service_repr():
+    """__repr__ includes name, state and created_at."""
+    s = FletXService(name="TestSvc", auto_start=False)
+    text = repr(s)
+    assert "TestSvc" in text
+    assert "created_at" in text
+
+
+def test_service_http_client_property():
+    """http_client property returns the injected client."""
+    s = FletXService(auto_start=False, http_client=None)
+    assert s.http_client is None
+
+
+def test_service_data_returns_copy():
+    """data property returns a copy, not the original dict."""
+    s = FletXService()
+    s.set_data("k", "v")
+    d = s.data
+    d["k"] = "modified"
+    assert s.get_data("k") == "v"  # original unchanged
+
+
+def test_service_is_properties():
+    """is_ready, is_loading, has_error work correctly."""
+    s = FletXService(auto_start=False)
+    assert not s.is_ready
+    assert not s.is_loading
+    assert not s.has_error
+    s.start()
+    assert s.is_ready
+
+
+async def test_service_start_async():
+    """Async start transitions to READY."""
+    import asyncio
+    s = FletXService(auto_start=False)
+    await s.start_async()
+    assert s.state == ServiceState.READY
+
