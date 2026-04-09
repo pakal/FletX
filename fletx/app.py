@@ -2,6 +2,7 @@
 FletX main entry point
 """
 
+import asyncio
 import inspect
 import atexit
 import flet as ft
@@ -234,7 +235,10 @@ class FletXApp:
             AppContext.initialize(page, self.debug)
             AppContext.set_data("logger", self.logger)
             AppContext.set_data("app", self)
-            AppContext.set_data("event_loop", self._loop_manager.loop)
+
+            # Use the actual running event loop (provided by Flet's ft.run())
+            # so that create_task() calls from the router land on the right loop.
+            AppContext.set_data("event_loop", asyncio.get_running_loop())
             
             # Initialize Router
             FletXRouter.initialize(
