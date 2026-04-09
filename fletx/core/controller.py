@@ -305,7 +305,7 @@ class FletXController:
     @property
     def is_disposed(self) -> bool:
         """Check if controller is disposed"""
-        return self._state == ControllerState.DISPOSED
+        return self._disposed
 
     @property
     def effects(self) -> EffectManager:
@@ -413,13 +413,15 @@ class FletXController:
         if self.is_disposed:
             return
 
+        self._disposed = True
+
         # Dispose children
         for child in self._children.copy():
             child.dispose()
 
         # Remove from tree
-        if self._parent:
-            self._parent._remove_child(self)
+        if self._parent.value and not self._parent.value.is_disposed:
+            self._parent.value.remove_child(self)
 
         # Execute cleanup tasks
         for cleanup_task in self._cleanup_tasks:

@@ -117,6 +117,7 @@ class Reactive(Generic[T]):
     def __init__(self, initial_value: T):
         self._value = initial_value
         self._observers: Set[Observer] = set()
+        self._dep_observers: list = []
 
     @property
     def logger(cls):
@@ -362,6 +363,10 @@ class RxList(Reactive[List[T]]):
         item = self._value.pop(idx)
         self._notify_observers()
         return item
+
+    def copy(self) -> list:
+        """Return a shallow copy of the underlying list."""
+        return self._value.copy()
 
     def extend(self, other: list):
         """Extends current RxList with the given pthon list."""
