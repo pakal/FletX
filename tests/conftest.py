@@ -32,40 +32,48 @@ def mock_flet_page():
 def app_context(mock_flet_page):
     """Initialize AppContext with a mock page, clean up after test."""
     AppContext.initialize(mock_flet_page, debug=False)
-    yield AppContext
-    AppContext.clear_data()
-    AppContext._is_initialized = False
-    AppContext._page = None
-    AppContext._debug = False
+    try:
+        yield AppContext
+    finally:
+        AppContext.clear_data()
+        AppContext._is_initialized = False
+        AppContext._page = None
+        AppContext._debug = False
 
 
 @pytest.fixture
 def app_context_debug(mock_flet_page):
     """Initialize AppContext in debug mode."""
     AppContext.initialize(mock_flet_page, debug=True)
-    yield AppContext
-    AppContext.clear_data()
-    AppContext._is_initialized = False
-    AppContext._page = None
-    AppContext._debug = False
+    try:
+        yield AppContext
+    finally:
+        AppContext.clear_data()
+        AppContext._is_initialized = False
+        AppContext._page = None
+        AppContext._debug = False
 
 
 @pytest.fixture
 def fresh_controller():
     """Yield a non-initialized FletXController, dispose after test."""
     ctrl = FletXController(auto_initialize=False)
-    yield ctrl
-    if not ctrl.is_disposed:
-        ctrl.dispose()
+    try:
+        yield ctrl
+    finally:
+        if not ctrl.is_disposed:
+            ctrl.dispose()
 
 
 @pytest.fixture
 def ready_controller():
     """Yield a fully initialized (READY) FletXController, dispose after test."""
     ctrl = FletXController(auto_initialize=True)
-    yield ctrl
-    if not ctrl.is_disposed:
-        ctrl.dispose()
+    try:
+        yield ctrl
+    finally:
+        if not ctrl.is_disposed:
+            ctrl.dispose()
 
 
 @pytest.fixture
@@ -108,8 +116,10 @@ def clean_route_config():
     from fletx.core.route_config import RouteConfig
     original_routes = RouteConfig._routes.copy()
     RouteConfig._routes = {}
-    yield RouteConfig
-    RouteConfig._routes = original_routes
+    try:
+        yield RouteConfig
+    finally:
+        RouteConfig._routes = original_routes
 
 
 @pytest.fixture
@@ -118,8 +128,10 @@ def worker_pool():
     from fletx.core.concurency.worker import WorkerPool
     from fletx.core.concurency.config import WorkerPoolConfig
     pool = WorkerPool(WorkerPoolConfig(max_workers=2, enable_priority=True, auto_shutdown=False))
-    yield pool
-    pool.shutdown(wait=True)
+    try:
+        yield pool
+    finally:
+        pool.shutdown(wait=True)
 
 
 @pytest.fixture
@@ -128,8 +140,10 @@ def worker_pool_no_priority():
     from fletx.core.concurency.worker import WorkerPool
     from fletx.core.concurency.config import WorkerPoolConfig
     pool = WorkerPool(WorkerPoolConfig(max_workers=2, enable_priority=False, auto_shutdown=False))
-    yield pool
-    pool.shutdown(wait=True)
+    try:
+        yield pool
+    finally:
+        pool.shutdown(wait=True)
 
 
 @pytest.fixture
@@ -144,12 +158,14 @@ def event_loop_manager():
     EventLoopManager._loop = None
     EventLoopManager._loop_owner = False
     mgr = EventLoopManager()
-    yield mgr
-    # Clean up: close loop if created
-    if mgr._loop is not None and not mgr._loop.is_closed():
-        mgr._loop.close()
-    # Restore singleton state
-    EventLoopManager._instance = original_instance
-    EventLoopManager._loop = original_loop
-    EventLoopManager._loop_owner = original_owner
+    try:
+        yield mgr
+    finally:
+        # Clean up: close loop if created
+        if mgr._loop is not None and not mgr._loop.is_closed():
+            mgr._loop.close()
+        # Restore singleton state
+        EventLoopManager._instance = original_instance
+        EventLoopManager._loop = original_loop
+        EventLoopManager._loop_owner = original_owner
 
