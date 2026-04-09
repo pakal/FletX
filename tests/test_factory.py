@@ -5,6 +5,10 @@ import importlib.util
 
 
 def _load_factory_and_deps():
+    # Save original sys.modules state for keys we're about to stub
+    _stub_keys = ("fletx", "flet", "fletx.utils.context")
+    _saved_modules = {k: sys.modules[k] for k in _stub_keys if k in sys.modules}
+
     # Stub minimal 'fletx.utils.context' and 'flet'
     if "fletx" not in sys.modules:
         sys.modules["fletx"] = types.ModuleType("fletx")
@@ -54,12 +58,18 @@ def _load_factory_and_deps():
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
     spec.loader.exec_module(module)
-    return module.FletXWidgetRegistry
+
+    # Restore original sys.modules so other tests can import real modules
+    for key in _stub_keys:
+        if key in _saved_modules:
+            sys.modules[key] = _saved_modules[key]
+        else:
+            sys.modules.pop(key, None)
+
+    return module.FletXWidgetRegistry, flet_mod
 
 
-FletXWidgetRegistry = _load_factory_and_deps()
-# Now import the stubbed flet so we can use it in tests
-import flet
+FletXWidgetRegistry, flet = _load_factory_and_deps()
 
 
 def test_widget_registration_success():

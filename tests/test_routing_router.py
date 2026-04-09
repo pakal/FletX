@@ -44,10 +44,17 @@ class MockComponent(FletXPage):
     """Mock component for testing."""
     
     def __init__(self):
-        super().__init__()
+        # Skip FletXPage.__init__() to avoid requiring app context
         self.route_info = None
         self.did_mount_called = False
-    
+        self._state = None
+        self._controllers = {}
+        self._effects = None
+        self._logger = Mock()
+
+    def build(self):
+        pass
+
     def did_mount(self):
         self.did_mount_called = True
     
@@ -206,8 +213,10 @@ class TestHistoryManagement:
         await self.router.navigate("/home")
         await self.router.navigate("/about")
         
-        assert len(self.router.state.history) == 1
-        assert self.router.state.history[0].path == "/home"
+        # History contains: initial "/" route + "/home" route (current is "/about")
+        assert len(self.router.state.history) == 2
+        assert self.router.state.history[0].path == "/"
+        assert self.router.state.history[1].path == "/home"
 
     def test_can_go_back(self):
         """Test can_go_back detection."""

@@ -6,6 +6,12 @@ import pytest
 
 
 def _load_di_and_errors():
+    # Save original sys.modules state for keys we're about to stub
+    _saved_modules = {}
+    for key in ('fletx', 'fletx.utils', 'fletx.utils.exceptions'):
+        if key in sys.modules:
+            _saved_modules[key] = sys.modules[key]
+
     # Stub minimal 'fletx.utils' and 'fletx.utils.exceptions' to avoid heavy deps
     if 'fletx' not in sys.modules:
         sys.modules['fletx'] = types.ModuleType('fletx')
@@ -43,6 +49,14 @@ def _load_di_and_errors():
         module.DI.logger = simple_logger  # override descriptor on class
     except Exception:
         pass
+
+    # Restore original sys.modules so other tests can import real modules
+    for key in ('fletx', 'fletx.utils', 'fletx.utils.exceptions'):
+        if key in _saved_modules:
+            sys.modules[key] = _saved_modules[key]
+        else:
+            sys.modules.pop(key, None)
+
     return module.DI, DependencyNotFoundError
 
 

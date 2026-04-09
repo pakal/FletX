@@ -806,9 +806,8 @@ class RouteTransition:
     async def wait_for_completion(self):
         """Wait for the current animation to complete."""
 
-        if self._current_animation:
-            await asyncio.sleep(self.duration / 1000)
-            self._animation_complete = True
+        await asyncio.sleep(self.duration / 1000)
+        self._animation_complete = True
 
 
 # Utility functions for creating common transitions

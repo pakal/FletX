@@ -713,7 +713,7 @@ class FletXPage(ft.Container, ABC):
             self.on_keyboard(self._handle_keyboard_shortcuts)
 
         # AUTO Page resize
-        def resize(e: ft.WindowResizeEvent):
+        def resize(e: ft.PageResizeEvent):
             """resizee page and refresh"""
 
             self.width = e.width
