@@ -96,6 +96,12 @@ class TestFletXRouterInitialization:
         assert FletXRouter._instance == router
         assert FletXRouter.get_instance() == router
 
+        # Close any unawaited coroutines passed to the mocked create_task
+        for call in mock_loop.return_value.create_task.call_args_list:
+            coro = call[0][0]
+            if hasattr(coro, 'close'):
+                coro.close()
+
     def test_get_instance_before_init_raises_error(self):
         """Test getting instance before initialization raises error."""
         FletXRouter._instance = None
@@ -399,3 +405,9 @@ class TestFletIntegration:
         self.router._on_flet_route_change(event)
         
         mock_loop.return_value.create_task.assert_called_once()
+
+        # Close the unawaited coroutine passed to the mocked create_task
+        for call in mock_loop.return_value.create_task.call_args_list:
+            coro = call[0][0]
+            if hasattr(coro, 'close'):
+                coro.close()
