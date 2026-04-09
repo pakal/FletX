@@ -159,10 +159,9 @@ class RouterConfig:
             raise ValueError(f"Parent route not found: {parent_path}")
         
         for route_config in routes:
-            child_path = f"{parent_path.rstrip('/')}/{route_config['path'].lstrip('/')}"
-            # Remove 'path' from kwargs to avoid duplicate argument
-            config_without_path = {k: v for k, v in route_config.items() if k != 'path'}
-            child_route = self.add_route(child_path, **config_without_path)
+            route_config = route_config.copy()
+            child_path = f"{parent_path.rstrip('/')}/{route_config.pop('path').lstrip('/')}"
+            child_route = self.add_route(child_path, **route_config)
             child_route.parent = parent_route
             parent_route.children.append(child_route)
     

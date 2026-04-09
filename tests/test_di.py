@@ -4,13 +4,11 @@ import types
 import importlib.util
 import pytest
 
+from conftest_utils import backup_sys_modules
 
+
+@backup_sys_modules('fletx', 'fletx.utils', 'fletx.utils.exceptions')
 def _load_di_and_errors():
-    # Save original sys.modules state for keys we're about to stub
-    _saved_modules = {}
-    for key in ('fletx', 'fletx.utils', 'fletx.utils.exceptions'):
-        if key in sys.modules:
-            _saved_modules[key] = sys.modules[key]
 
     # Stub minimal 'fletx.utils' and 'fletx.utils.exceptions' to avoid heavy deps
     if 'fletx' not in sys.modules:
@@ -50,12 +48,6 @@ def _load_di_and_errors():
     except Exception:
         pass
 
-    # Restore original sys.modules so other tests can import real modules
-    for key in ('fletx', 'fletx.utils', 'fletx.utils.exceptions'):
-        if key in _saved_modules:
-            sys.modules[key] = _saved_modules[key]
-        else:
-            sys.modules.pop(key, None)
 
     return module.DI, DependencyNotFoundError
 
