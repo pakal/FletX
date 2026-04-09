@@ -3,11 +3,11 @@ import sys
 import types
 import importlib.util
 
+from conftest_utils import backup_sys_modules
 
+
+@backup_sys_modules("fletx", "fletx.utils", "fletx.utils.exceptions", "fletx.core.state", "fletx.core.http")
 def _load_services_and_deps():
-    # Save original sys.modules state for keys we're about to stub
-    _stub_keys = ("fletx", "fletx.utils", "fletx.utils.exceptions", "fletx.core.state", "fletx.core.http")
-    _saved_modules = {k: sys.modules[k] for k in _stub_keys if k in sys.modules}
 
     # Stub minimal 'fletx.utils' and 'fletx.utils.exceptions' and 'fletx.core.state' and 'fletx.core.http'
     if "fletx" not in sys.modules:
@@ -115,12 +115,6 @@ def _load_services_and_deps():
     assert spec.loader is not None
     spec.loader.exec_module(module)
 
-    # Restore original sys.modules so other tests can import real modules
-    for key in _stub_keys:
-        if key in _saved_modules:
-            sys.modules[key] = _saved_modules[key]
-        else:
-            sys.modules.pop(key, None)
 
     return module.FletXService, module.ServiceState, module.HTTPClient
 

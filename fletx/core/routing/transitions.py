@@ -115,8 +115,7 @@ class RouteTransition:
         self.params = kwargs
         self._logger = get_logger('FletX.RouteTransition')
         self._animation_complete = False
-        self._current_animation = None
-    
+
     def _get_animation_curve(self) -> str:
         """Convert EasingFunction to Flet animation curve."""
 
