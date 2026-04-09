@@ -6,7 +6,7 @@ readme = "PYPI.md"
 license = {file = "LICENSE"}
 authors = [{ name = "AllDotPy", email = "hello@alldotpy.com" }]
 maintainers = [{ name = "#Einswilli", email = "einswilligoeh@email.com" }]
-requires-python = ">=3.10,<=3.13"
+requires-python = ">=3.10,<=3.14"
 keywords = [
     "fletx", "fletxr", "flet", "reactive state",
     "routing", "di", "dependency injection"
@@ -15,7 +15,7 @@ dependencies = [
     "aiohttp>=3.9.5",
     "pydantic>=2.11.5",
     "packaging>=21.0",
-    "flet==0.28.3",
+    "flet==0.84.0",
     "requests>=2.31.0",     # For packaging
 ]
 
@@ -31,18 +31,18 @@ Tracker = "https://github.com/AllDotPy/FletX/issues"
 # Optional deps
 [project.optional-dependencies] 
 dev = [
-    "flet-cli==0.28.3",
-    "flet-desktop==0.28.3",
-    "flet-web==0.28.3",
+    "flet-cli==0.84.0",
+    "flet-desktop==0.84.0",
+    "flet-web==0.84.0",
     "pytest>=8.4.0",
 ]
 
 # Dependency groups for FletX development
 [dependency-groups]
 dev = [
-    "flet-cli==0.28.3",
-    "flet-desktop==0.28.3",
-    "flet-web==0.28.3",
+    "flet-cli==0.84.0",
+    "flet-desktop==0.84.0",
+    "flet-web==0.84.0",
     "black", 
     "mypy",
     "twine",
