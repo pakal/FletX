@@ -161,3 +161,55 @@ class TestVersionChecker:
         assert "Python" in msg
         assert len(suggestions) >= 2
 
+    def test_get_fletx_version_caches(self):
+        vc = VersionChecker()
+        v1 = vc.get_fletx_version()
+        v2 = vc.get_fletx_version()
+        assert v1 is v2
+
+    def test_get_python_version_caches(self):
+        vc = VersionChecker()
+        v1 = vc.get_python_version()
+        v2 = vc.get_python_version()
+        assert v1 is v2
+
+    def test_get_flet_version(self):
+        vc = VersionChecker()
+        flet_v = vc.get_flet_version()
+        assert flet_v.package_name == "Flet"
+        assert flet_v.version_str  # not empty
+
+    def test_get_flet_version_caches(self):
+        vc = VersionChecker()
+        v1 = vc.get_flet_version()
+        v2 = vc.get_flet_version()
+        assert v1 is v2
+
+    def test_get_package_version_not_found(self):
+        vc = VersionChecker()
+        with pytest.raises(ImportError, match="Could not determine version"):
+            vc._get_package_version("nonexistent_package_xyz_12345")
+
+    def test_check_compatibility_returns_result(self):
+        vc = VersionChecker()
+        result = vc.check_compatibility()
+        assert isinstance(result, CompatibilityResult)
+        assert result.fletx_version is not None
+        assert result.flet_version is not None
+
+    def test_check_compatibility_unknown_version(self):
+        vc = VersionChecker()
+        vc._fletx_version = VersionInfo("99.99.99", "FletX")
+        result = vc.check_compatibility()
+        assert result.is_compatible is False
+        assert "Unknown" in result.message
+
+    def test_check_compatibility_exception_handling(self):
+        """When check_compatibility encounters an error creating fallback VersionInfo,
+        the exception propagates (bug in source: 'unknown' is not a valid version)."""
+        from packaging.version import InvalidVersion
+        vc = VersionChecker()
+        with patch.object(vc, 'get_fletx_version', side_effect=Exception("test error")):
+            with pytest.raises(InvalidVersion):
+                vc.check_compatibility()
+

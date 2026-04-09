@@ -423,6 +423,9 @@ class TestReactiveBatch:
             bm.add_update(Mock())
         assert mock_ct.call_count == 1
         assert bm.batch_scheduled is True
+        # Close the coroutine to avoid "was never awaited" warning
+        coro = mock_ct.call_args[0][0]
+        coro.close()
 
     @pytest.mark.asyncio
     async def test_flush_batch_executes_all(self):

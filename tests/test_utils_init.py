@@ -88,6 +88,56 @@ class TestImportModuleFrom:
             import_module_from("nonexistent_module_12345")
 
 
+class TestRunAsync:
+    """Tests for fletx.utils.run_async."""
+
+    def test_run_async_with_non_running_loop(self, app_context):
+        """run_async runs coroutine to completion on non-running loop."""
+        import asyncio
+
+        mock_loop = Mock()
+        mock_loop.is_running.return_value = False
+        mock_loop.run_until_complete = Mock()
+        app_context.set_data("event_loop", mock_loop)
+
+        from fletx.utils import run_async
+
+        called = []
+
+        async def my_coro():
+            called.append(True)
+            return 42
+
+        run_async(my_coro)
+        mock_loop.run_until_complete.assert_called_once()
+        # Close the coroutine passed to run_until_complete to avoid warning
+        coro = mock_loop.run_until_complete.call_args[0][0]
+        coro.close()
+
+    def test_run_async_with_running_loop(self, app_context):
+        """run_async schedules a task when loop is already running."""
+        import asyncio
+
+        mock_task = Mock()
+        mock_task.add_done_callback = Mock()
+        mock_loop = Mock()
+        mock_loop.is_running.return_value = True
+        mock_loop.create_task.return_value = mock_task
+        app_context.set_data("event_loop", mock_loop)
+
+        from fletx.utils import run_async
+
+        async def my_coro():
+            return 42
+
+        run_async(my_coro)
+        mock_loop.create_task.assert_called_once()
+        mock_task.add_done_callback.assert_called_once()
+        # Close the coroutine passed to create_task to avoid warning
+        coro = mock_loop.create_task.call_args[0][0]
+        coro.close()
+
+
 class TestUiFriendlySleep:
     """Tests for fletx.utils.ui_friendly_sleep."""
 

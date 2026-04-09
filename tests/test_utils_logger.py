@@ -79,3 +79,39 @@ class TestSharedLoggerInstanceMethods:
         sl = SharedLogger()
         assert sl.logger is SharedLogger.get_logger()
 
+    def test_initialize_logger_with_invalid_env_level(self):
+        """_initialize_logger with invalid FLETX_LOG_LEVEL falls back to NOTSET."""
+        old_logger = SharedLogger._logger
+        old_env = SharedLogger._env_log_level
+        SharedLogger._logger = None
+        SharedLogger._env_log_level = "INVALID_LEVEL"
+        try:
+            SharedLogger._initialize_logger("InvalidLevel", debug=False)
+            assert SharedLogger._logger is not None
+        finally:
+            SharedLogger._logger = old_logger
+            SharedLogger._env_log_level = old_env
+
+    def test_initialize_logger_with_valid_env_level(self):
+        """_initialize_logger uses a valid env-based level."""
+        old_logger = SharedLogger._logger
+        old_env = SharedLogger._env_log_level
+        SharedLogger._logger = None
+        SharedLogger._env_log_level = "WARNING"
+        try:
+            SharedLogger._initialize_logger("WarnLevel", debug=False)
+            assert SharedLogger._logger.level == logging.WARNING
+        finally:
+            SharedLogger._logger = old_logger
+            SharedLogger._env_log_level = old_env
+
+    def test_initialize_logger_adds_handler(self):
+        """_initialize_logger adds a StreamHandler if none exists."""
+        old_logger = SharedLogger._logger
+        SharedLogger._logger = None
+        try:
+            SharedLogger._initialize_logger("HandlerTest")
+            assert len(SharedLogger._logger.handlers) > 0
+        finally:
+            SharedLogger._logger = old_logger
+

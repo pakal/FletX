@@ -3,6 +3,7 @@ Shared pytest fixtures for FletX tests.
 """
 
 import pytest
+import asyncio
 from unittest.mock import Mock, patch
 import flet as ft
 
@@ -99,4 +100,56 @@ def mock_page_dependencies():
             'di': mock_di,
             'effects': mock_effects,
         }
+
+
+@pytest.fixture
+def clean_route_config():
+    """Provide a clean RouteConfig, reset after test."""
+    from fletx.core.route_config import RouteConfig
+    original_routes = RouteConfig._routes.copy()
+    RouteConfig._routes = {}
+    yield RouteConfig
+    RouteConfig._routes = original_routes
+
+
+@pytest.fixture
+def worker_pool():
+    """Provide a fresh WorkerPool, shut down after test."""
+    from fletx.core.concurency.worker import WorkerPool
+    from fletx.core.concurency.config import WorkerPoolConfig
+    pool = WorkerPool(WorkerPoolConfig(max_workers=2, enable_priority=True, auto_shutdown=False))
+    yield pool
+    pool.shutdown(wait=True)
+
+
+@pytest.fixture
+def worker_pool_no_priority():
+    """Provide a WorkerPool with priority disabled."""
+    from fletx.core.concurency.worker import WorkerPool
+    from fletx.core.concurency.config import WorkerPoolConfig
+    pool = WorkerPool(WorkerPoolConfig(max_workers=2, enable_priority=False, auto_shutdown=False))
+    yield pool
+    pool.shutdown(wait=True)
+
+
+@pytest.fixture
+def event_loop_manager():
+    """Provide a fresh EventLoopManager, clean up after test."""
+    from fletx.core.concurency.event_loop import EventLoopManager
+    # Reset singleton
+    original_instance = EventLoopManager._instance
+    original_loop = EventLoopManager._loop
+    original_owner = EventLoopManager._loop_owner
+    EventLoopManager._instance = None
+    EventLoopManager._loop = None
+    EventLoopManager._loop_owner = False
+    mgr = EventLoopManager()
+    yield mgr
+    # Clean up: close loop if created
+    if mgr._loop is not None and not mgr._loop.is_closed():
+        mgr._loop.close()
+    # Restore singleton state
+    EventLoopManager._instance = original_instance
+    EventLoopManager._loop = original_loop
+    EventLoopManager._loop_owner = original_owner
 
