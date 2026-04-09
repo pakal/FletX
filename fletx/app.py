@@ -248,8 +248,14 @@ class FletXApp:
             self.logger.error(f"Error initializing FletX App: {e}")
             page.add(ft.Text(f"Initialization Error: {e}", color=ft.Colors.RED))
 
+    async def _full_main(self, page: ft.Page):
+        """Full async main entry point with shutdown hook attachment"""
+
+        await self._async_main(page)
+        self.attach_on_shutdown_hooks()
+
     def _sync_main(self, page: ft.Page):
-        """Sync main entry point"""
+        """Sync main entry point (legacy — prefer _full_main)"""
 
         try:
             self._loop_manager.run_until_complete(
@@ -259,54 +265,31 @@ class FletXApp:
         except Exception as e:
             self.logger.error(f'Error when trying to run App: {e}')
 
-        # finally:
-            # Execute shutdown hooks
-            # if self.on_shutdown:
-            #     self._loop_manager.run_until_complete(
-            #         self._execute_hooks(self.on_shutdown, "shutdown")
-            #     )
-            # self._loop_manager.close_loop()
-
     def _main(self, page: ft.Page):
         """Main entry point (backward compatibility)"""
 
         self._sync_main(page)
     
     def create_main_handler(self) -> Callable:
-        """Create a main handler for ft.app()"""
+        """Create a main handler for ft.run()"""
 
-        return self._sync_main
-    
+        return self._full_main
+
     def create_async_main_handler(self) -> Callable:
         """Create an async main handler"""
 
-        return self._async_main
-        
+        return self._full_main
+
     def run(self, **kwargs):
-        """Run the application (sync mode)"""
+        """Run the application"""
 
         merged_kwargs = {**self.flet_kwargs, **kwargs}
-        ft.app(target=self._sync_main, **merged_kwargs)
+        ft.run(main=self._full_main, **merged_kwargs)
 
     def run_async(self, **kwargs):  # noqa: F811
-        """Run the application (async mode)"""
+        """Run the application (async mode) — alias for run()"""
 
-        def async_wrapper(page):
-
-            try:
-                self._loop_manager.run_until_complete(self._async_main(page))
-                self.attach_on_shutdown_hooks()
-            except Exception as e:
-                self.logger.error(f'Error when trying to run App: {e}')
-            # finally:
-            #     if self.on_shutdown:
-            #         self._loop_manager.run_until_complete(
-            #             self._execute_hooks(self.on_shutdown, "shutdown")
-            #         )
-                # self._loop_manager.close_loop()
-        
-        merged_kwargs = {**self.flet_kwargs, **kwargs}
-        ft.app(target = async_wrapper, **merged_kwargs)
+        self.run(**kwargs)
 
     def run_web(
         self, 
@@ -316,11 +299,11 @@ class FletXApp:
         """Run as web application"""
 
         merged_kwargs = {**self.flet_kwargs, **kwargs}
-        ft.app(
-            target = self._sync_main, 
-            view = ft.WEB_BROWSER, 
-            host = host, 
-            port = port, 
+        ft.run(
+            main=self._full_main,
+            view=ft.WEB_BROWSER,
+            host=host,
+            port=port,
             **merged_kwargs
         )
     
@@ -328,9 +311,9 @@ class FletXApp:
         """Run as desktop application"""
 
         merged_kwargs = {**self.flet_kwargs, **kwargs}
-        ft.app(
-            target = self._sync_main, 
-            view = ft.FLET_APP, 
+        ft.run(
+            main=self._full_main,
+            view=ft.FLET_APP,
             **merged_kwargs
         )
 
