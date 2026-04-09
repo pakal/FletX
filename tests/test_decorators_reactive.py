@@ -411,9 +411,12 @@ class TestReactiveBatch:
         """BatchManager.add_update adds fn to pending_updates."""
         bm = BatchManager()
         fn = Mock()
-        with patch("fletx.decorators.reactive.asyncio.create_task"):
+        with patch("fletx.decorators.reactive.asyncio.create_task") as mock_ct:
             bm.add_update(fn)
         assert fn in bm.pending_updates
+        # Close the coroutine to avoid "was never awaited" warning
+        coro = mock_ct.call_args[0][0]
+        coro.close()
 
     def test_batch_manager_schedules_once(self):
         """Multiple add_update calls schedule flush only once."""
