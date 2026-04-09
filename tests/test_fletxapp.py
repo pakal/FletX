@@ -1,7 +1,11 @@
 import pytest
+
+import fletx
+print(">>>>>>>>>>>>", fletx)
 from unittest.mock import Mock
 from fletx.app import FletXApp
 import flet as ft
+
 
 def test_fletxapp_initialization_defaults():
     """Test FletXApp initialization with default values."""

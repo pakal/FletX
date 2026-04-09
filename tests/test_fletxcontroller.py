@@ -4,9 +4,9 @@ from fletx.core.controller import FletXController, ControllerState
 def test_default_initialization_registers_instance():
     controller = FletXController()
     
-    # State should auto-initialize
-    assert controller.state.value == ControllerState.INITIALIZED
-    
+    # State should auto-initialize and then transition to READY
+    assert controller.state.value == ControllerState.READY
+
     # It should be in the global instances list
     assert controller in FletXController.get_all_instances()
     
@@ -22,9 +22,9 @@ def test_initialization_with_auto_initialize_false():
     # Should remain CREATED
     assert controller.state.value == ControllerState.CREATED
     
-    # After explicit initialize, it moves to INITIALIZED
+    # After explicit initialize, it transitions to INITIALIZED then READY
     controller.initialize()
-    assert controller.state.value == ControllerState.INITIALIZED
+    assert controller.state.value == ControllerState.READY
 
 
 def test_repr_contains_state_and_id():

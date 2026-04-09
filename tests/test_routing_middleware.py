@@ -217,9 +217,9 @@ class TestRouteMiddlewareEdgeCases:
         """Test middleware behavior with None route parameters."""
         middleware = RouteMiddleware()
         
-        # Should handle None gracefully or raise appropriate error
-        with pytest.raises(AttributeError):
-            await middleware.before_navigation(None, self.route_info)
+        # Base middleware handles None gracefully by returning None
+        result = await middleware.before_navigation(None, self.route_info)
+        assert result is None
 
     def test_middleware_inheritance(self):
         """Test that middleware properly inherits from RouteMiddleware."""

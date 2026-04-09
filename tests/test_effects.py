@@ -5,6 +5,10 @@ import importlib.util
 
 
 def _load_effects_and_deps():
+    # Save original sys.modules state for keys we're about to stub
+    _stub_keys = ("fletx", "fletx.utils")
+    _saved_modules = {k: sys.modules[k] for k in _stub_keys if k in sys.modules}
+
     # Stub minimal 'fletx.utils'
     if "fletx" not in sys.modules:
         sys.modules["fletx"] = types.ModuleType("fletx")
@@ -35,6 +39,14 @@ def _load_effects_and_deps():
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
     spec.loader.exec_module(module)
+
+    # Restore original sys.modules so other tests can import real modules
+    for key in _stub_keys:
+        if key in _saved_modules:
+            sys.modules[key] = _saved_modules[key]
+        else:
+            sys.modules.pop(key, None)
+
     return module.EffectManager, module.Effect
 
 

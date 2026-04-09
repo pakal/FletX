@@ -161,8 +161,8 @@ class TestRouterConfig:
         module.get_routes.return_value = [
             RouteDefinition(path="/mod", component=self.component)
         ]
-        module._config._route_patterns = []
-        
+        module._config = RouterConfig()
+
         self.config.add_module_routes("/api", module)
         
         route = self.config._routes["/api/mod"]
